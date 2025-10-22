@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Personal Productivity Dashboard</title>
+  <meta name="description" content="Organise goals, habits, and tasks for Work, Wellbeing, and Learning. Tick off daily goals and watch progress bars fill dynamically." />
+  <style>
+    :root{
+      --bg:#0b1020;          /* overall background */
+      --panel:#0f162e;       /* cards */
+      --ink:#e8ebf3;         /* text */
+      --muted:#a7b3ce;       /* secondary text */
+      --line:#1b2547;        /* borders */
+      --accent:#8ab4ff;      /* general accent */
+
+      /* Category hues */
+      --work:#60a5fa;        /* blue */
+      --wellbeing:#34d399;   /* green */
+      --learning:#f59e0b;    /* amber */
+
+      --radius:18px;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(129,140,248,.10), transparent 70%),
+        radial-gradient(900px 500px at -10% 20%, rgba(96,165,250,.12), transparent 70%),
+        linear-gradient(160deg, #0b1020 0%, #0b1125 60%, #0c1022 100%);
+      color:var(--ink);
+    }
+
+    header{max-width:1100px; margin:32px auto 8px; padding:0 16px}
+    header h1{margin:0; font-size:clamp(1.4rem, 2.2vw + 1rem, 2.4rem); letter-spacing:.2px}
+    header p{margin:.4rem 0 0; color:var(--muted)}
+
+    .wrap{max-width:1100px; margin:0 auto; padding:16px}
+
+    .topbar{
+      display:flex; gap:16px; align-items:center; justify-content:space-between;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+      border:1px solid var(--line); border-radius:var(--radius);
+      padding:14px 16px; box-shadow:var(--shadow);
+      position:sticky; top:8px; backdrop-filter:blur(12px); z-index:5;
+    }
+    .quote{display:flex; align-items:center; gap:12px; min-height:40px}
+    .quote .mark{width:8px; height:36px; border-radius:6px; background:var(--accent)}
+    .quote p{margin:0; color:var(--ink)}
+    .quote small{display:block; color:var(--muted)}
+
+    .controls{display:flex; gap:10px; flex-wrap:wrap}
+    .btn{
+      border:1px solid var(--line); background:#0c1530; color:var(--ink);
+      padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600;
+      transition:.2s transform ease, .2s background-color ease, .2s border-color ease, .2s box-shadow ease;
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,0,0,.25)}
+
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:18px; margin-top:18px}
+    .col-4{grid-column:span 4}
+    @media (max-width: 950px){.col-4{grid-column:span 6}}
+    @media (max-width: 650px){.col-4{grid-column:span 12}}
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.005));
+      border:1px solid var(--line); border-radius:var(--radius); padding:16px;
+      box-shadow:var(--shadow);
+    }
+
+    .card header{display:flex; align-items:center; justify-content:space-between; padding:0; margin:0 0 8px}
+    .tag{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; font-weight:700; letter-spacing:.2px;
+         background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:999px}
+    .dot{width:10px; height:10px; border-radius:999px}
+
+    .progress{margin:12px 0 10px; height:10px; background:#0b1330; border-radius:999px; overflow:hidden; border:1px solid var(--line)}
+    .bar{height:100%; width:0%; background:var(--accent); transition:width .35s ease}
+    .metrics{display:flex; justify-content:space-between; color:var(--muted); font-size:.9rem; margin-bottom:8px}
+
+    .adder{display:flex; gap:8px; margin:8px 0 10px}
+    .input{
+      flex:1; background:#0b1430; color:var(--ink); border:1px solid var(--line);
+      padding:10px 12px; border-radius:12px; outline:none; font-size:0.98rem;
+    }
+
+    .items{display:flex; flex-direction:column; gap:8px}
+    .todo{
+      display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.02);
+      border:1px solid var(--line); border-radius:12px; padding:10px;
+    }
+    .todo input[type="checkbox"]{width:18px; height:18px; accent-color:currentColor}
+    .todo label{flex:1}
+    .todo .trash{border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:18px}
+    .todo .trash:hover{color:#fff}
+
+    /* overall progress */
+    .overall{margin-top:18px}
+
+    /* subtle category-tinted borders */
+    .card.work{border-color: color-mix(in oklab, var(--work) 45%, var(--line))}
+    .card.wellbeing{border-color: color-mix(in oklab, var(--wellbeing) 45%, var(--line))}
+    .card.learning{border-color: color-mix(in oklab, var(--learning) 45%, var(--line))}
+
+    .tag.work{border-color: color-mix(in oklab, var(--work) 50%, var(--line))}
+    .tag.wellbeing{border-color: color-mix(in oklab, var(--wellbeing) 50%, var(--line))}
+    .tag.learning{border-color: color-mix(in oklab, var(--learning) 50%, var(--line))}
+
+    .bar.work{background:var(--work)}
+    .bar.wellbeing{background:var(--wellbeing)}
+    .bar.learning{background:var(--learning)}
+
+    footer{max-width:1100px; margin:18px auto 30px; padding:0 16px; color:var(--muted); text-align:center}
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Personal Productivity Dashboard</h1>
+    <p>Organise your daily goals across <strong>Work</strong>, <strong>Wellbeing</strong>, and <strong>Learning</strong>. Tick items off and watch your progress fill up.</p>
+  </header>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div class="quote" id="quoteBox">
+        <div class="mark" id="quoteMark"></div>
+        <div>
+          <p id="quoteText">Loading daily motivation…</p>
+          <small id="quoteAuthor"></small>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="newDay">Start New Day</button>
+        <button class="btn" id="export">Export Data</button>
+        <button class="btn" id="importBtn">Import</button>
+        <input type="file" id="importFile" accept="application/json" hidden>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="card col-4 work" data-cat="work">
+        <header>
+          <span class="tag work"><span class="dot" style="background:var(--work)"></span> Work</span>
+        </header>
+        <div class="metrics"><span id="workCount">0 of 0 complete</span><span id="workPct">0%</span></div>
+        <div class="progress"><div class="bar work" id="workBar"></div></div>
+
+        <div class="adder">
+          <input class="input" id="workInput" placeholder="Add a work goal… (e.g., Finish proposal)" />
+          <button class="btn" data-add="work">Add</button>
+        </div>
+        <div class="items" id="workList"></div>
+      </section>
+
+      <section class="card col-4 wellbeing" data-cat="wellbeing">
+        <header>
+          <span class="tag wellbeing"><span class="dot" style="background:var(--wellbeing)"></span> Wellbeing</span>
+        </header>
+        <div class="metrics"><span id="wellbeingCount">0 of 0 complete</span><span id="wellbeingPct">0%</span></div>
+        <div class="progress"><div class="bar wellbeing" id="wellbeingBar"></div></div>
+
+        <div class="adder">
+          <input class="input" id="wellbeingInput" placeholder="Add a wellbeing goal… (e.g., 20‑min walk)" />
+          <button class="btn" data-add="wellbeing">Add</button>
+        </div>
+        <div class="items" id="wellbeingList"></div>
+      </section>
+
+      <section class="card col-4 learning" data-cat="learning">
+        <header>
+          <span class="tag learning"><span class="dot" style="background:var(--learning)"></span> Learning</span>
+        </header>
+        <div class="metrics"><span id="learningCount">0 of 0 complete</span><span id="learningPct">0%</span></div>
+        <div class="progress"><div class="bar learning" id="learningBar"></div></div>
+
+        <div class="adder">
+          <input class="input" id="learningInput" placeholder="Add a learning goal… (e.g., Read 10 pages)" />
+          <button class="btn" data-add="learning">Add</button>
+        </div>
+        <div class="items" id="learningList"></div>
+      </section>
+    </div>
+
+    <section class="card overall" aria-live="polite">
+      <header style="margin-bottom:8px">
+        <span class="tag"><span class="dot" style="background:var(--accent)"></span> Overall Progress</span>
+      </header>
+      <div class="metrics"><span id="overallCount">0 of 0 complete</span><span id="overallPct">0%</span></div>
+      <div class="progress"><div class="bar" id="overallBar"></div></div>
+    </section>
+  </div>
+
+  <footer>
+    Built for you — daily goals with colour‑coded categories and an auto‑refreshing quote to keep you motivated.
+  </footer>
+
+<script>
+(function(){
+  const CATS = ["work","wellbeing","learning"];
+  const ids = {
+    work:{list:"workList", input:"workInput", count:"workCount", pct:"workPct", bar:"workBar"},
+    wellbeing:{list:"wellbeingList", input:"wellbeingInput", count:"wellbeingCount", pct:"wellbeingPct", bar:"wellbeingBar"},
+    learning:{list:"learningList", input:"learningInput", count:"learningCount", pct:"learningPct", bar:"learningBar"},
+  };
+
+  const STORAGE_KEY = "ppd_tasks_v2"; // tasks + lastCompleted
+  const todayKey = ()=> new Date().toISOString().slice(0,10); // YYYY-MM-DD
+
+  const $ = sel => document.querySelector(sel);
+  const makeEl = (tag, opts={})=>Object.assign(document.createElement(tag), opts);
+
+  // Seed data if empty
+  const defaultData = {
+    meta:{version:2},
+    tasks:{
+      work:[
+        {id: uid(), text:"Plan top priorities", lastCompleted:""},
+        {id: uid(), text:"Deep work 60 min", lastCompleted:""},
+      ],
+      wellbeing:[
+        {id: uid(), text:"10‑min stretch", lastCompleted:""},
+        {id: uid(), text:"Drink 2L water", lastCompleted:""},
+      ],
+      learning:[
+        {id: uid(), text:"Read 10 pages", lastCompleted:""},
+        {id: uid(), text:"Watch 1 tutorial", lastCompleted:""},
+      ],
+    }
+  };
+
+  function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36)}
+  function load(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || structuredClone(defaultData) }
+    catch(e){ return structuredClone(defaultData) }
+  }
+  function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) }
+
+  let state = load();
+
+  // QUOTES — rotate daily (no network needed)
+  const QUOTES = [
+    ["Small steps add up.", "Unknown"],
+    ["What gets measured gets managed.", "Peter Drucker"],
+    ["The secret of getting ahead is getting started.", "Mark Twain"],
+    ["Action is the foundational key to all success.", "Pablo Picasso"],
+    ["Discipline equals freedom.", "Jocko Willink"],
+    ["Simplicity is the ultimate sophistication.", "Leonardo da Vinci"],
+    ["Done is better than perfect.", "Sheryl Sandberg"],
+    ["We are what we repeatedly do.", "Aristotle"],
+    ["Focus on the process, not the prize.", "Unknown"],
+    ["You don’t need more time, you need more focus.", "Unknown"],
+  ];
+  function setDailyQuote(){
+    const d = new Date();
+    const idx = Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())) / 86400000) % QUOTES.length;
+    const [q,a] = QUOTES[idx];
+    $("#quoteText").textContent = q;
+    $("#quoteAuthor").textContent = a ? "— "+a : "";
+    // tint bar shifts by day for subtle variety
+    const hues = ["var(--work)","var(--wellbeing)","var(--learning)"];
+    $("#quoteMark").style.background = hues[idx % hues.length];
+  }
+
+  function render(){
+    let total=0, done=0;
+    CATS.forEach(cat=>{
+      const list = $("#"+ids[cat].list);
+      list.innerHTML = "";
+      const tasks = state.tasks[cat];
+      const today = todayKey();
+      tasks.forEach(item=>{
+        const row = makeEl('div',{className:'todo'});
+        const cb = makeEl('input',{type:'checkbox'});
+        cb.checked = (item.lastCompleted === today);
+        cb.addEventListener('change',()=>{
+          item.lastCompleted = cb.checked ? todayKey() : "";
+          save();
+          updateMeters();
+        });
+        const label = makeEl('label',{textContent:item.text});
+        const del = makeEl('button',{className:'trash', innerHTML:'✕', title:'Remove'});
+        del.addEventListener('click',()=>{ state.tasks[cat] = state.tasks[cat].filter(t=>t.id!==item.id); save(); render(); });
+        row.append(cb,label,del);
+        list.append(row);
+      });
+
+      // add handlers for the input/button
+      const input = $("#"+ids[cat].input);
+      const addBtn = document.querySelector(`[data-add="${cat}"]`);
+      const add = ()=>{
+        const val = (input.value||"").trim();
+        if(!val) return;
+        state.tasks[cat].push({id:uid(), text:val, lastCompleted:""});
+        input.value = ""; save(); render();
+      };
+      input.onkeydown = (e)=>{ if(e.key==='Enter') add(); };
+      addBtn.onclick = add;
+    });
+    updateMeters();
+  }
+
+  function updateMeters(){
+    let grandTotal=0, grandDone=0;
+    CATS.forEach(cat=>{
+      const tasks = state.tasks[cat];
+      const today = todayKey();
+      const t = tasks.length;
+      const d = tasks.filter(x=>x.lastCompleted===today).length;
+      const pct = t ? Math.round((d/t)*100) : 0;
+      $("#"+ids[cat].count).textContent = `${d} of ${t} complete`;
+      $("#"+ids[cat].pct).textContent = `${pct}%`;
+      $("#"+ids[cat].bar).style.width = pct+"%";
+      grandTotal += t; grandDone += d;
+    });
+    const opct = grandTotal ? Math.round((grandDone/grandTotal)*100) : 0;
+    $("#overallCount").textContent = `${grandDone} of ${grandTotal} complete`;
+    $("#overallPct").textContent = `${opct}%`;
+    $("#overallBar").style.width = opct+"%";
+  }
+
+  // New Day: clear today's ticks only (keeps your task list)
+  $("#newDay").addEventListener('click', ()=>{
+    CATS.forEach(cat=> state.tasks[cat].forEach(t=> t.lastCompleted=""));
+    save(); render();
+  });
+
+  // Export / Import
+  $("#export").addEventListener('click', ()=>{
+    const data = JSON.stringify(state, null, 2);
+    const blob = new Blob([data], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `ppd-backup-${todayKey()}.json`; a.click();
+    URL.revokeObjectURL(url);
+  });
+  $("#importBtn").addEventListener('click', ()=> $("#importFile").click());
+  $("#importFile").addEventListener('change', async (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    try{
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if(!data.tasks) throw new Error('Invalid file');
+      state = data; save(); render();
+    }catch(err){ alert('Import failed: '+err.message) }
+    e.target.value = '';
+  });
+
+  // Kick off
+  setDailyQuote();
+  render();
+})();
+</script>
+</body>
+</html>
