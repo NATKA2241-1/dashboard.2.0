@@ -7,17 +7,17 @@
   <meta name="description" content="Organise goals, habits, and tasks for Work, Wellbeing, and Learning. Tick off daily goals and watch progress bars fill dynamically." />
   <style>
     :root{
-      --bg:#0b1020;          /* overall background */
-      --panel:#0f162e;       /* cards */
-      --ink:#e8ebf3;         /* text */
-      --muted:#a7b3ce;       /* secondary text */
-      --line:#1b2547;        /* borders */
-      --accent:#8ab4ff;      /* general accent */
+      --bg:#2b0b24;          /* overall background */
+      --panel:#3a112f;       /* cards */
+      --ink:#ffe9f5;         /* text */
+      --muted:#f3c0db;       /* secondary text */
+      --line:#4b183d;        /* borders */
+      --accent:#ff7ac6;      /* general accent */
 
       /* Category hues */
-      --work:#60a5fa;        /* blue */
-      --wellbeing:#34d399;   /* green */
-      --learning:#f59e0b;    /* amber */
+      --work:#ff9dbd;        /* blush */
+      --wellbeing:#ff77ab;   /* bright pink */
+      --learning:#ffb5d8;    /* light pink */
 
       --radius:18px;
       --shadow:0 10px 30px rgba(0,0,0,.35);
@@ -27,9 +27,9 @@
     body{
       margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:
-        radial-gradient(1200px 600px at 80% -10%, rgba(129,140,248,.10), transparent 70%),
-        radial-gradient(900px 500px at -10% 20%, rgba(96,165,250,.12), transparent 70%),
-        linear-gradient(160deg, #0b1020 0%, #0b1125 60%, #0c1022 100%);
+        radial-gradient(1200px 600px at 80% -10%, rgba(255,170,214,.14), transparent 70%),
+        radial-gradient(900px 500px at -10% 20%, rgba(255,119,171,.18), transparent 70%),
+        linear-gradient(170deg, #2b0b24 0%, #401431 55%, #2f0b27 100%);
       color:var(--ink);
     }
 
@@ -37,11 +37,15 @@
     header h1{margin:0; font-size:clamp(1.4rem, 2.2vw + 1rem, 2.4rem); letter-spacing:.2px}
     header p{margin:.4rem 0 0; color:var(--muted)}
 
-    .wrap{max-width:1100px; margin:0 auto; padding:16px}
+    .wrap{
+      max-width:1100px; margin:0 auto; padding:16px;
+      display:flex; flex-direction:column; gap:18px;
+      min-height:calc(100vh - 180px);
+    }
 
     .topbar{
       display:flex; gap:16px; align-items:center; justify-content:space-between;
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
       border:1px solid var(--line); border-radius:var(--radius);
       padding:14px 16px; box-shadow:var(--shadow);
       position:sticky; top:8px; backdrop-filter:blur(12px); z-index:5;
@@ -53,19 +57,25 @@
 
     .controls{display:flex; gap:10px; flex-wrap:wrap}
     .btn{
-      border:1px solid var(--line); background:#0c1530; color:var(--ink);
+      border:1px solid color-mix(in oklab, var(--accent) 55%, var(--line));
+      background:color-mix(in oklab, var(--accent) 15%, rgba(0,0,0,.4));
+      color:var(--ink);
       padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600;
       transition:.2s transform ease, .2s background-color ease, .2s border-color ease, .2s box-shadow ease;
     }
-    .btn:hover{transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,0,0,.25)}
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 8px 24px rgba(0,0,0,.35);
+      background:color-mix(in oklab, var(--accent) 30%, rgba(0,0,0,.35));
+    }
 
-    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:18px; margin-top:18px}
+    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:18px; margin-top:0}
     .col-4{grid-column:span 4}
     @media (max-width: 950px){.col-4{grid-column:span 6}}
     @media (max-width: 650px){.col-4{grid-column:span 12}}
 
     .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.005));
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
       border:1px solid var(--line); border-radius:var(--radius); padding:16px;
       box-shadow:var(--shadow);
     }
@@ -75,7 +85,7 @@
          background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:999px}
     .dot{width:10px; height:10px; border-radius:999px}
 
-    .progress{margin:12px 0 10px; height:10px; background:#0b1330; border-radius:999px; overflow:hidden; border:1px solid var(--line)}
+    .progress{margin:12px 0 10px; height:10px; background:#2b0b2f; border-radius:999px; overflow:hidden; border:1px solid var(--line)}
     .bar{height:100%; width:0%; background:var(--accent); transition:width .35s ease}
     .metrics{display:flex; justify-content:space-between; color:var(--muted); font-size:.9rem; margin-bottom:8px}
 
@@ -96,7 +106,7 @@
     .todo .trash:hover{color:#fff}
 
     /* overall progress */
-    .overall{margin-top:18px}
+    .overall{margin-top:0}
 
     /* subtle category-tinted borders */
     .card.work{border-color: color-mix(in oklab, var(--work) 45%, var(--line))}
@@ -114,6 +124,38 @@
     footer{max-width:1100px; margin:18px auto 30px; padding:0 16px; color:var(--muted); text-align:center}
     a{color:var(--accent); text-decoration:none}
     a:hover{text-decoration:underline}
+
+    .breathing{margin-top:auto}
+    .breathing-inner{
+      display:flex; gap:24px; align-items:center; flex-wrap:wrap;
+    }
+    .breathing-visual{
+      flex:0 0 160px; display:flex; justify-content:center; align-items:center;
+    }
+    .breathing-circle{
+      width:160px; height:160px; border-radius:50%;
+      background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(255,255,255,.08));
+      border:2px solid color-mix(in oklab, var(--accent) 70%, transparent);
+      box-shadow:0 15px 45px rgba(0,0,0,.35);
+      transform:scale(.75);
+    }
+    .breathing-circle.animate{
+      animation:breathe 12s ease-in-out infinite;
+    }
+    @keyframes breathe{
+      0%{transform:scale(.75);}
+      33%{transform:scale(1.12);}
+      50%{transform:scale(1.12);}
+      83%{transform:scale(.75);}
+      100%{transform:scale(.75);}
+    }
+    .breathing-info{flex:1; min-width:240px;}
+    .breathing-info h2{margin:0 0 6px; font-size:1.4rem; letter-spacing:.3px}
+    .breathing-info p{margin:0 0 12px; color:var(--muted);}
+    .breathing-status{font-weight:600; margin-bottom:12px; color:var(--ink); font-size:1.05rem;}
+    @media (max-width:600px){
+      .breathing-circle{width:130px; height:130px;}
+    }
   </style>
 </head>
 <body>
@@ -189,6 +231,20 @@
       </header>
       <div class="metrics"><span id="overallCount">0 of 0 complete</span><span id="overallPct">0%</span></div>
       <div class="progress"><div class="bar" id="overallBar"></div></div>
+    </section>
+
+    <section class="card breathing" aria-live="polite">
+      <div class="breathing-inner">
+        <div class="breathing-visual">
+          <div class="breathing-circle" id="breathCircle"></div>
+        </div>
+        <div class="breathing-info">
+          <h2>Breathing Exercise</h2>
+          <p>Follow a calming four-count inhale, two-count hold, and gentle four-count exhale to reset between tasks.</p>
+          <div class="breathing-status" id="breathPrompt">Press start to begin.</div>
+          <button class="btn" id="breathToggle">Start</button>
+        </div>
+      </div>
     </section>
   </div>
 
@@ -319,6 +375,52 @@
     $("#overallPct").textContent = `${opct}%`;
     $("#overallBar").style.width = opct+"%";
   }
+
+  // Breathing exercise controls
+  const breathBtn = $("#breathToggle");
+  const breathCircle = $("#breathCircle");
+  const breathPrompt = $("#breathPrompt");
+  const breathSteps = [
+    {text:"Inhale", duration:4000},
+    {text:"Hold", duration:2000},
+    {text:"Exhale", duration:4000},
+    {text:"Hold", duration:2000},
+  ];
+  let breathTimer = null;
+  let breathIndex = 0;
+  let breathing = false;
+
+  function stopBreathing(){
+    breathing = false;
+    breathBtn.textContent = "Start";
+    breathCircle.classList.remove("animate");
+    breathPrompt.textContent = "Press start to begin.";
+    if(breathTimer){
+      clearTimeout(breathTimer);
+      breathTimer = null;
+    }
+  }
+
+  function runBreathingCycle(){
+    const step = breathSteps[breathIndex];
+    breathPrompt.textContent = step.text;
+    breathIndex = (breathIndex + 1) % breathSteps.length;
+    breathTimer = setTimeout(runBreathingCycle, step.duration);
+  }
+
+  breathBtn.addEventListener("click", ()=>{
+    if(breathing){
+      stopBreathing();
+      return;
+    }
+    breathing = true;
+    breathIndex = 0;
+    breathBtn.textContent = "Stop";
+    breathCircle.classList.add("animate");
+    runBreathingCycle();
+  });
+
+  window.addEventListener("beforeunload", stopBreathing);
 
   // New Day: clear today's ticks only (keeps your task list)
   $("#newDay").addEventListener('click', ()=>{
